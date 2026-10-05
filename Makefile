@@ -8,16 +8,14 @@ BIN  := $(VENV)/bin
 export PATH := $(HOME)/.opencode/bin:$(HOME)/.local/bin:$(PATH)
  
 # Models cached by llama - "make model"
-MODELS ?=	empero-ai/Qwen3.8-4B-Distill-GGUF:Q8_0 \
-			peculiar-ragdoll/Sharp-Spark-X2.5-4B-GGUF:Q6_K_XL
-          
+MODELS ?= LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
  
 # Model opencode starts with (provider id "llama" + model id from opencode.json)
-MODEL ?= empero-ai/Qwen3.8-4B-Distill-GGUF:Q8_0
+MODEL ?= LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
  
 HOST     ?= 127.0.0.1
 PORT     ?= 8080
-CONTEXT  ?= 32768
+CONTEXT  ?= 16384
 PARALLEL ?= 1
  
 # -------------------------------------------------------------------
@@ -124,6 +122,7 @@ serve: llama
 	@echo ""
 	@llama serve \
 		--jinja \
+		--n-gpu-layers auto \
 		--host "$(HOST)" \
 		--port "$(PORT)" \
 		-c "$(CONTEXT)" \

@@ -11,19 +11,19 @@ The project is intended as a convenient baseline for experimentation with locall
 It was developed and tested on limited GPU hardware ([GPU model, VRAM]), which is why the default models are small, quantized 4B-parameter variants. The setup is not tied to this configuration. It can be adapted to less capable hardware by choosing smaller or more heavily quantized models, and to more capable hardware by serving larger models or longer context windows.
  
 ## Scope and Design Goals
- 
+
 - **Reproducibility.** Dependencies are pinned through `uv.lock`, and installation is performed by a single scripted procedure.
 - **Locality.** Inference is performed entirely on the host machine. No network access is required during normal operation, after models have been downloaded.
 - **Low configuration overhead.** Installation and startup are driven by Makefile targets; no manual editing of configuration files is required for the default setup.
 - **Multi-model serving.** llama.cpp is run in router mode, which serves all cached models on demand.
+
 ## Default Models
- 
+
 Two quantized models are configured by default:
- 
+
 | Model | Identifier | Quantization |
 |---|---|---|
-| Sharp Spark X2.5 4B | `peculiar-ragdoll/Sharp-Spark-X2.5-4B-GGUF` | Q6_K_XL |
-| Qwen3.8 4B Distill | `empero-ai/Qwen3.8-4B-Distill-GGUF` | Q8_0 |
+| LiquidAI LFM2.5-2.6B | `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0` | Q8_0 |
  
 Model files are obtained from the [Hugging Face Hub](https://huggingface.co) & [llama.app](https://llama.app/models).
  
