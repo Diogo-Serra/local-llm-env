@@ -8,10 +8,11 @@ BIN  := $(VENV)/bin
 export PATH := $(HOME)/.opencode/bin:$(HOME)/.llama-app:$(HOME)/.local/bin:$(PATH)
 
 # Models cached by llama - "make model"
-MODELS ?= 	LiquidAI/LFM2.5-2.6B-GGUF:Q8_0 \
+MODELS ?= 	Qwen/Qwen2.5-3B-Instruct-GGUF:Q8_0 \
+			LiquidAI/LFM2.5-2.6B-GGUF:Q8_0 \
 
 # Model opencode starts with (provider id "llama" + model id from opencode.json)
-MODEL ?= 	LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
+MODEL ?= 	Qwen/Qwen2.5-3B-Instruct-GGUF:Q8_0
  
 HOST     ?= 127.0.0.1
 PORT     ?= 8080
