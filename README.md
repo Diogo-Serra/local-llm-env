@@ -23,9 +23,16 @@ Two quantized models are configured by default:
 
 | Model | Identifier | Quantization |
 |---|---|---|
-| LiquidAI LFM2.5-2.6B | `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0` | Q8_0 |
- 
-Model files are obtained from the [Hugging Face Hub](https://huggingface.co) & [llama.app](https://llama.app/models).
+| Default Model | `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0` | Q8_0 |
+
+			         
+## Also Tested Models
+
+- **openbmb/MiniCPM5-2B-GGUF:Q8_0** - Small 2B quantized model for efficient inference
+- **empero-ai/Qwen3.8-2B-Distill-GGUF:BF16** - Distilled Qwen3.8-2B model with BF16 quantization
+- **openbmb/MiniCPM5-2B-GGUF:F16** - Higher precision F16 quantized version of MiniCPM5
+
+Model files are obtained from the [Hugging Face Hub](https://huggingface.co).
  
 ## Requirements
  
@@ -64,9 +71,9 @@ Starts llama.cpp in router mode. All cached models are served on demand at `http
 ### 2. Start the agent interface
  
 ```bash
-make opencode-local
+make opencode-local 
 ```
- 
+
 Launches opencode, configured through `opencode.json` to connect to the local llama.cpp server.
  
 ### 3. Verify system status
@@ -110,7 +117,7 @@ Models other than the defaults may be used as follows.
  
 2. For future use, add the model to the `MODEL` variable in the `Makefile`:
 ```makefile
-   MODEL := Sharp-Spark-X2.5-4B-GGUF:Q6_K_XL|Qwen3.8-4B-Distill-GGUF:Q8_0|MyModel-7B-GGUF:Q4_K_M
+    MODEL := Default-Model-4B|Qwen3.8-4B-Distill-GGUF:Q8_0|MyModel-7B-GGUF:Q4_K_M
 ```
  
 3. Re-run `make install`, followed by `make serve` and `make opencode-local`.

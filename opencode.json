@@ -11,12 +11,13 @@
       },
       "models": {
         "LiquidAI/LFM2.5-2.6B-GGUF:Q8_0": {
-          "name": "LFM2.5-2.6B (Q8_0)",
-          "limit": { "context": 32768, "output": 4096 },
+          "name": "LFM2.5-2.6B:Q8_0",
+          "limit": { "context": 32384, "output": 4096 },
           "tool_call": true,
           "reasoning": true,
           "attachment": true,
-          "temperature": true
+          "temperature": true,
+          "options": { "temperature": 0.1, "top_k": 50 }
         }
       }
     }
