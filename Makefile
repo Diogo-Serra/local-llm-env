@@ -8,20 +8,33 @@ BIN  := $(VENV)/bin
 export PATH := $(HOME)/.opencode/bin:$(HOME)/.llama-app:$(HOME)/.local/bin:$(PATH)
 
 # Models cached by llama - "make model"
-MODELS ?= 	Qwen/Qwen2.5-3B-Instruct-GGUF:Q8_0 \
-			LiquidAI/LFM2.5-2.6B-GGUF:Q8_0 \
+MODELS ?=	LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
 
 # Model opencode starts with (provider id "llama" + model id from opencode.json)
-MODEL ?= 	Qwen/Qwen2.5-3B-Instruct-GGUF:Q8_0
+MODEL ?= 	LiquidAI/LFM2.5-2.6B-GGUF:Q8_0
  
 HOST     ?= 127.0.0.1
 PORT     ?= 8080
-CONTEXT  ?= 65536
+CONTEXT  ?= 32768
 PARALLEL ?= 1
  
 # -------------------------------------------------------------------
 # Full installation
 # -------------------------------------------------------------------
+ # Install only llama to use as provider for other harness
+ install_llama: python llama model
+	@echo ""
+	@echo "======================================"
+	@echo " Local LLM environment ready"
+	@echo "======================================"
+	@echo ""
+	@echo "Python:   $(BIN)/python"
+	@echo "llama:    $$(command -v llama)"
+	@echo "models:   $(MODELS)"
+	@echo ""
+	@echo "Start llama.cpp with:"
+	@echo "  make serve"
+	@echo ""
  
 install: python llama opencode model
 	@echo ""
@@ -160,7 +173,7 @@ status:
 	else \
 		echo "  uv (in .venv): NOT FOUND"; \
 	fi
-	@for bin in llama opencode; do \
+	@for bin in llama llama-server opencode; do \
 		if command -v $$bin >/dev/null 2>&1; then \
 			echo "  $$bin: $$(command -v $$bin)"; \
 		else \
@@ -181,7 +194,23 @@ status:
 	else \
 		echo "  Models: not available (server not running)"; \
 	fi
- 
+	@echo ""
+	@echo "==> GPU:"
+	@if command -v llama-server >/dev/null 2>&1; then \
+		out=$$(llama-server --list-devices 2>&1); \
+		echo "$$out" | sed 's/^/  /'; \
+		if echo "$$out" | grep -qiE 'cuda|vulkan|rocm|hip|metal|sycl'; then \
+			echo "  GPU backend: FOUND"; \
+		else \
+			echo "  GPU backend: NOT FOUND (this build is CPU-only)"; \
+		fi; \
+	else \
+		echo "  llama-server: NOT FOUND (cannot list devices)"; \
+	fi
+	@if command -v nvidia-smi >/dev/null 2>&1; then \
+		echo "  VRAM in use:"; \
+		nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv,noheader | sed 's/^/    /'; \
+	fi
 # -------------------------------------------------------------------
 # Clean: remove everything this Makefile installed
 #   make clean         asks for confirmation first

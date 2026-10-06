@@ -1,39 +1,59 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "Qwen/Qwen2.5-3B-Instruct-GGUF:Q8_0",
+
+  "model": "LiquidAI/LFM2.5-2.6B-GGUF:Q8_0",
+
+  "mcp": {
+    "Web-Research": {
+      "type": "local",
+      "command": [
+        "/home/diserra/.local/bin/omnisearch"
+      ],
+      "enabled": true
+    }
+  },
+
   "provider": {
     "llama": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "llama.cpp (local)",
+
       "options": {
         "baseURL": "http://127.0.0.1:8080/v1"
       },
+
       "models": {
         "LiquidAI/LFM2.5-2.6B-GGUF:Q8_0": {
           "name": "LFM2.5-2.6B:Q8_0",
-          "limit": { "context": 32384, "output": 4096 },
+
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          },
+
           "tool_call": true,
           "temperature": true,
-          "options": { "temperature": 0.1, "top_k": 50 }
-        },
-        "Qwen/Qwen2.5-3B-Instruct-GGUF:Q8_0": {
-          "name": "Qwen2.5-3B-Instruct-GGUF:Q8_0",
-          "limit": { "context": 32384, "output": 4096 },
-          "tool_call": true,
-          "temperature": true,
-          "options": { "temperature": 0.1, "top_k": 50 }
-        },
-        "tools": {
-          "read": true,
-          "list": true,
-          "glob": true,
-          "grep": true,
-          "edit": true,
-          "write": true,
-          "bash": true,
-          "webfetch": true
+
+          "options": {
+            "temperature": 0.1,
+            "top_k": 50
+          }
         }
       }
     }
+  },
+
+  "tools": {
+    "read": true,
+    "list": true,
+    "glob": true,
+    "grep": true,
+    "edit": true,
+    "write": true,
+    "patch": true,
+    "bash": true,
+    "webfetch": false,
+    "todowrite": true,
+    "todoread": true
   }
 }

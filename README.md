@@ -19,18 +19,20 @@ It was developed and tested on limited GPU hardware ([GPU model, VRAM]), which i
 
 ## Default Models
 
-Two quantized models are configured by default:
+One quantized model is configured by default:
 
 | Model | Identifier | Quantization |
 |---|---|---|
 | Default Model | `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0` | Q8_0 |
 
-			         
+
 ## Also Tested Models
 
 - **openbmb/MiniCPM5-2B-GGUF:Q8_0** - Small 2B quantized model for efficient inference
-- **empero-ai/Qwen3.8-2B-Distill-GGUF:BF16** - Distilled Qwen3.8-2B model with BF16 quantization
 - **openbmb/MiniCPM5-2B-GGUF:F16** - Higher precision F16 quantized version of MiniCPM5
+- **empero-ai/Qwen3.8-2B-Distill-GGUF:BF16** - Distilled Qwen3.8-2B model with BF16 quantization
+- **lmstudio-community/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M** - Q4_K_M quantized model
+- **Qwen/Qwen2.5-Coder-3B-Instruct-GGUF:Q8_0** - Q8_0 quantized Coder model
 
 Model files are obtained from the [Hugging Face Hub](https://huggingface.co).
  
@@ -43,6 +45,7 @@ Model files are obtained from the [Hugging Face Hub](https://huggingface.co).
 | Inference runtime | llama.cpp | Installed by `make install` |
 | Agent interface | opencode | Installed by `make install` |
 | Model hosting | Hugging Face Hub | Used to download model files |
+| MCP servers | [MCP servers](https://mcpservers.org/servers/elleryfamilia/terminal-mcp) | Downloaded for terminal operations |
  
 ## Installation
  
@@ -76,6 +79,16 @@ make opencode-local
 
 Launches opencode, configured through `opencode.json` to connect to the local llama.cpp server.
  
+### 3. Install MCP Servers
+
+Terminal:
+curl -fsSL https://raw.githubusercontent.com/elleryfamilia/terminal-mcp/main/install.sh | bash
+terminal-mcp setup
+
+Web fetch:
+uv tool install git+https://github.com/sydasif/web-search-mcp.git
+
+
 ### 3. Verify system status
  
 ```bash
