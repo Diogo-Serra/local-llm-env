@@ -1,59 +1,63 @@
 # local-llm
  
-A reproducible environment for running locally hosted language models with minimal configuration.
+A reproducible, low-configuration environment for running open-weight language models entirely on your own machine.
  
-## Description
+`local-llm` provisions a complete local inference stack with a single command: [llama.cpp](https://github.com/ggml-org/llama.cpp) as the inference runtime and [opencode](https://github.com/anomalyco/opencode) as the command-line agent interface (the harness that provides tool use, context management, and a terminal UI). Once models are downloaded, no external API or network access is required.
  
-`local-llm` automates the provisioning of a local inference environment for open-weight language models. It combines [llama.cpp](https://github.com/ggml-org/llama.cpp) as the inference runtime with [opencode](https://github.com/anomalyco/opencode) as a command-line agent interface, and as the agent harness, the layer that provides tool use, context management, and a terminal interface to the model. Once installed, all inference runs on the local machine and requires no external API services.
+It is intended as a convenient baseline for experimenting with locally hosted models, and for users who would rather not assemble the toolchain by hand.
  
-The project is intended as a convenient baseline for experimentation with locally hosted models, and for users who prefer not to assemble the toolchain manually.
-
-It was developed and tested on limited GPU hardware ([GPU model, VRAM]), which is why the default models are small, quantized 4B-parameter variants. The setup is not tied to this configuration. It can be adapted to less capable hardware by choosing smaller or more heavily quantized models, and to more capable hardware by serving larger models or longer context windows.
+> **Tested hardware:** 6 GB of VRAM. The default models are therefore small, quantized variants (roughly 2B–4B parameters). Nothing in the setup is tied to this configuration; see [Adapting to Different Hardware](#adapting-to-different-hardware).
  
-## Scope and Design Goals
-
-- **Reproducibility.** Dependencies are pinned through `uv.lock`, and installation is performed by a single scripted procedure.
-- **Locality.** Inference is performed entirely on the host machine. No network access is required during normal operation, after models have been downloaded.
-- **Low configuration overhead.** Installation and startup are driven by Makefile targets; no manual editing of configuration files is required for the default setup.
-- **Multi-model serving.** llama.cpp is run in router mode, which serves all cached models on demand.
-
-## Default Models
-
-One quantized model is configured by default:
-
-| Model | Identifier | Quantization |
-|---|---|---|
-| Default Model | `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0` | Q8_0 |
-
-
-## Also Tested Models
-
-- **openbmb/MiniCPM5-2B-GGUF:Q8_0** - Small 2B quantized model for efficient inference
-- **openbmb/MiniCPM5-2B-GGUF:F16** - Higher precision F16 quantized version of MiniCPM5
-- **empero-ai/Qwen3.8-2B-Distill-GGUF:BF16** - Distilled Qwen3.8-2B model with BF16 quantization
-- **lmstudio-community/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M** - Q4_K_M quantized model
-- **Qwen/Qwen2.5-Coder-3B-Instruct-GGUF:Q8_0** - Q8_0 quantized Coder model
-
-Model files are obtained from the [Hugging Face Hub](https://huggingface.co).
+## Table of Contents
  
+- [Features](#features)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Models](#models)
+- [Adapting to Different Hardware](#adapting-to-different-hardware)
+- [MCP Servers](#mcp-servers)
+- [Repository Structure](#repository-structure)
+- [Resources](#resources)
+- [Project Status and Contributing](#project-status-and-contributing)
+- [AI Use Disclosure](#ai-use-disclosure)
+## Features
+ 
+- **Reproducible.** Dependencies are pinned in `uv.lock`, and installation is a single scripted procedure.
+- **Local-first.** All inference runs on the host. After the initial model download, no network access is needed during normal operation.
+- **Low configuration overhead.** Installation and startup are driven by `make` targets; the default setup requires no manual editing of configuration files.
+- **Multi-model serving.** llama.cpp runs in router mode, serving every cached model on demand through one endpoint.
 ## Requirements
  
 | Component | Requirement | Provisioning |
 |---|---|---|
 | Python | >= 3.14 | Managed by the project |
 | Package manager | [uv](https://github.com/astral-sh/uv) | Installed by `make install` |
-| Inference runtime | llama.cpp | Installed by `make install` |
-| Agent interface | opencode | Installed by `make install` |
-| Model hosting | Hugging Face Hub | Used to download model files |
-| MCP servers | [MCP servers](https://mcpservers.org/servers/elleryfamilia/terminal-mcp) | Downloaded for terminal operations |
+| Inference runtime | [llama.cpp](https://github.com/ggml-org/llama.cpp) | Installed by `make install` |
+| Agent interface | [opencode](https://github.com/anomalyco/opencode) | Installed by `make install` |
+| Model source | [Hugging Face Hub](https://huggingface.co) | Used to download GGUF model files |
+| MCP servers (optional) | See [MCP Servers](#mcp-servers) | Installed manually |
  
-## Installation
+Recommended: a GPU with at least 6 GB of VRAM for the default models. Smaller or more heavily quantized models can run on less capable hardware.
+ 
+## Quick Start
+ 
+```bash
+make install   # provision the environment and download the default model
+make serve     # start the inference server (terminal 1)
+make opencode-local   # start the agent interface (terminal 2)
+```
+ 
+## Usage
+ 
+### Installation
  
 ```bash
 make install
 ```
  
-This target performs the following steps:
+This target:
  
 1. Creates the Python environment (`.venv`) and installs `uv` if it is not already present.
 2. Installs llama.cpp and opencode.
@@ -61,9 +65,7 @@ This target performs the following steps:
 4. Confirms that the configured models are available.
 A summary of the resulting setup is printed on completion.
  
-## Usage
- 
-### 1. Start the inference server
+### Start the inference server
  
 ```bash
 make serve
@@ -71,25 +73,15 @@ make serve
  
 Starts llama.cpp in router mode. All cached models are served on demand at `http://127.0.0.1:8080`.
  
-### 2. Start the agent interface
+### Start the agent interface
  
 ```bash
-make opencode-local 
+make opencode-local
 ```
-
-Launches opencode, configured through `opencode.json` to connect to the local llama.cpp server.
  
-### 3. Install MCP Servers
-
-Terminal:
-curl -fsSL https://raw.githubusercontent.com/elleryfamilia/terminal-mcp/main/install.sh | bash
-terminal-mcp setup
-
-Web fetch:
-uv tool install git+https://github.com/sydasif/web-search-mcp.git
-
-
-### 3. Verify system status
+Launches opencode, which connects to the local llama.cpp server as defined in `opencode.json`.
+ 
+### Check system status
  
 ```bash
 make status
@@ -97,7 +89,7 @@ make status
  
 Reports the state of the installed binaries, the server process, and the available models.
  
-### 4. Stop and clean up
+### Stop and clean up
  
 | Command | Effect |
 |---|---|
@@ -106,48 +98,86 @@ Reports the state of the installed binaries, the server process, and the availab
  
 ## Configuration
  
-Default settings are defined in the project files and can be overridden through Makefile variables:
+Defaults are defined in the project files and can be overridden through `Makefile` variables:
  
-| Variable | Purpose |
-|---|---|
-| `MODEL` | Model(s) to be served |
-| `HOST` | Server bind address (default `127.0.0.1`) |
-| `PORT` | Server port (default `8080`) |
-| `CONTEXT` | Context window size |
-| `PARALLEL` | Number of parallel request slots |
+| Variable | Purpose | Default |
+|---|---|---|
+| `MODEL` | Model(s) to be served | See [Models](#models) |
+| `HOST` | Server bind address | `127.0.0.1` |
+| `PORT` | Server port | `8080` |
+| `CONTEXT` | Context window size | Defined in `Makefile` |
+| `PARALLEL` | Number of parallel request slots | Defined in `Makefile` |
  
-The connection between opencode and the local server is defined in `opencode.json`.
+The connection between opencode and the local server is defined in `opencode.json`. Changes to the `Makefile` take effect the next time the server is started with `make serve`.
  
-## Using Additional Models
+## Models
  
-Models other than the defaults may be used as follows.
+Model files are obtained from the [Hugging Face Hub](https://huggingface.co) in GGUF format.
  
-1. Obtain a GGUF-format model from the Hugging Face Hub:
+### Default model
+ 
+| Model | Identifier | Quantization |
+|---|---|---|
+| LFM2.5 2.6B | `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0` | Q8_0 |
+ 
+### Also tested
+ 
+| Model | Quantization | Notes |
+|---|---|---|
+| `openbmb/MiniCPM5-2B-GGUF` | Q8_0 | Small 2B model for efficient inference |
+| `openbmb/MiniCPM5-2B-GGUF` | F16 | Full-precision variant of the above |
+| `empero-ai/Qwen3.8-2B-Distill-GGUF` | BF16 | Distilled Qwen3.8 2B |
+| `lmstudio-community/Qwen3-4B-Instruct-2507-GGUF` | Q4_K_M | 4B instruct model |
+| `Qwen/Qwen2.5-Coder-3B-Instruct-GGUF` | Q8_0 | Code-focused 3B model |
+ 
+### Adding other models
+ 
+1. Download a GGUF model from the Hugging Face Hub by serving it once with llama.cpp (from within the activated `.venv`):
 ```bash
-   (.venv) # to use hf:huggingface
-   llama serve -hf MyModel-7B-GGUF:Q4_K_M/MyModel-7B-GGUF-Q4_K_M.gguf
+   llama-server -hf MyModel-7B-GGUF:Q4_K_M
 ```
  
-2. For future use, add the model to the `MODEL` variable in the `Makefile`:
+2. To make the model permanent, add it to the `MODEL` variable in the `Makefile`:
 ```makefile
-    MODEL := Default-Model-4B|Qwen3.8-4B-Distill-GGUF:Q8_0|MyModel-7B-GGUF:Q4_K_M
+   MODEL := LiquidAI/LFM2.5-2.6B-GGUF:Q8_0|MyOrg/MyModel-7B-GGUF:Q4_K_M
 ```
  
-3. Re-run `make install`, followed by `make serve` and `make opencode-local`.
-Only two components require modification to support additional models: llama.cpp (inference) and opencode (model routing and configuration).
+3. Re-run `make install`, then `make serve` and `make opencode-local`.
+Only two components need to know about additional models: llama.cpp (inference) and opencode (model routing and configuration).
  
 ## Adapting to Different Hardware
  
-The defaults reflect the limited hardware described above. Resource use is controlled in two places: the `Makefile` variables (see [Configuration](#configuration)) and the choice of model.
+The defaults reflect the 6 GB VRAM test configuration. Resource use is controlled by the `Makefile` variables and by the choice of model.
  
 | To reduce memory use or load | To use more capable hardware |
 |---|---|
 | Lower `CONTEXT` (smaller context window) | Raise `CONTEXT` (longer context window) |
 | Lower `PARALLEL` (fewer concurrent request slots) | Raise `PARALLEL` (more concurrent request slots) |
-| Serve a smaller model, or a lower quantization (for example Q4 instead of Q8) | Serve a larger model, or a higher quantization |
+| Serve a smaller model or a lower-bit quantization (e.g. Q4 instead of Q8) | Serve a larger model or a higher-precision quantization |
  
-Changes to the `Makefile` take effect the next time the server is started with `make serve`. New models are added as described in [Using Additional Models](#using-additional-models). Further server options, including GPU offloading, are documented in the [llama.cpp server documentation](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md).
-
+Further server options, including GPU offloading, are documented in the [llama.cpp server documentation](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md).
+ 
+## MCP Servers
+ 
+opencode can use [Model Context Protocol](https://opencode.ai/docs/mcp-servers/) servers to extend the agent with additional tools. The following are optional and not installed by `make install`.
+ 
+**Terminal operations** ([terminal-mcp](https://mcpservers.org/servers/elleryfamilia/terminal-mcp)):
+ 
+```bash
+curl -fsSL https://raw.githubusercontent.com/elleryfamilia/terminal-mcp/main/install.sh | bash
+terminal-mcp setup
+```
+ 
+> Piping a remote script into a shell executes code you have not reviewed. Inspect the script before running it.
+ 
+**Web search and fetch** ([web-search-mcp](https://github.com/sydasif/web-search-mcp)):
+ 
+```bash
+uv tool install git+https://github.com/sydasif/web-search-mcp.git
+```
+ 
+Note that web-based tools require network access, which departs from the fully offline operation described above.
+ 
 ## Repository Structure
  
 ```
@@ -161,9 +191,7 @@ local_llm/
 └── uv.lock               # Dependency lockfile
 ```
  
-## Additional Resources
- 
-The following references document the components on which this project depends. They are maintained by their respective projects and may change independently of this repository.
+## Resources
  
 ### llama.cpp
  
@@ -171,8 +199,8 @@ The following references document the components on which this project depends. 
 |---|---|
 | [Repository](https://github.com/ggml-org/llama.cpp) | Source code, releases, and build instructions |
 | [Server documentation](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) | `llama-server` options, HTTP API, and router mode |
-| [Server development notes](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README-dev.md) | Architecture of the server and of router mode |
-| [Model management in llama.cpp](https://huggingface.co/blog/ggml-org/model-management-in-llamacpp) | Overview of router mode, model caching, and on-demand loading |
+| [Server development notes](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README-dev.md) | Architecture of the server and router mode |
+| [Model management in llama.cpp](https://huggingface.co/blog/ggml-org/model-management-in-llamacpp) | Router mode, model caching, and on-demand loading |
  
 ### opencode
  
@@ -181,30 +209,39 @@ The following references document the components on which this project depends. 
 | [Repository](https://github.com/anomalyco/opencode) | Source code and releases |
 | [Documentation](https://opencode.ai/docs/) | Installation and general usage |
 | [Configuration](https://opencode.ai/docs/config/) | The `opencode.json` file and its options |
-| [Providers](https://opencode.ai/docs/providers/) | Connecting opencode to model providers, including local servers |
+| [Providers](https://opencode.ai/docs/providers/) | Connecting to model providers, including local servers |
 | [Models](https://opencode.ai/docs/models/) | Selecting and configuring models |
-| [Agents](https://opencode.ai/docs/agents/) | Defining primary agents and subagents |
+| [Agents](https://opencode.ai/docs/agents/) | Primary agents and subagents |
 | [Agent Skills](https://opencode.ai/docs/skills/) | Creating and loading reusable skills |
 | [Commands](https://opencode.ai/docs/commands/) | Custom slash commands |
 | [Rules](https://opencode.ai/docs/rules/) | Project instructions through `AGENTS.md` |
-| [MCP servers](https://opencode.ai/docs/mcp-servers/) | Connecting external tools through the Model Context Protocol |
-| [Custom tools](https://opencode.ai/docs/custom-tools/) | Extending opencode with user-defined tools |
-| [Plugins](https://opencode.ai/docs/plugins/) | Extending opencode through the plugin interface |
+| [MCP servers](https://opencode.ai/docs/mcp-servers/) | External tools through the Model Context Protocol |
+| [Custom tools](https://opencode.ai/docs/custom-tools/) | User-defined tools |
+| [Plugins](https://opencode.ai/docs/plugins/) | The plugin interface |
 | [Permissions](https://opencode.ai/docs/permissions/) | Controlling which actions an agent may perform |
 | [Ecosystem](https://opencode.ai/docs/ecosystem/) | Community plugins, tools, and projects |
  
-### Model Distribution
+### Model distribution
  
 | Resource | Description |
 |---|---|
-| [Hugging Face Hub](https://huggingface.co) | Repository of open-weight models, including GGUF-format files |
-
-## Project Status and Contributions
+| [Hugging Face Hub](https://huggingface.co) | Open-weight models, including GGUF files |
  
-This project is a work in progress. It was created as a learning exercise to better understand large language models and the tooling used to run them locally, and it may contain errors, omissions, or outdated information.
+These references are maintained by their respective projects and may change independently of this repository.
  
-Findings, corrections, bug reports, and suggestions are welcome and may be submitted through the issue tracker of this repository. Reports are most useful when they include the hardware used, the operating system, the model and quantization served, and the relevant `Makefile` settings.
+## Project Status and Contributing
+ 
+This project is a work in progress, created as a learning exercise to better understand large language models and the tooling used to run them locally. It may contain errors, omissions, or outdated information.
+ 
+Corrections, bug reports, and suggestions are welcome through the issue tracker. Reports are most useful when they include:
+ 
+- Hardware (GPU model and VRAM)
+- Operating system
+- Model and quantization served
+- Relevant `Makefile` settings
 
 ## AI Use Disclosure
  
-AI tools, including small language models, were used to support the development of this project and the writing of its documentation. The author remains responsible for the accuracy, originality, and final content of the work.
+AI tools were used to support the development of this project and the writing of its documentation. This includes a locally hosted AI agent powered by `LiquidAI/LFM2.5-2.6B-GGUF:Q8_0`, the default model of this project, as well as other small language models.
+ 
+The author reviewed the AI-assisted material and remains responsible for the accuracy, originality, and final content of the work.
